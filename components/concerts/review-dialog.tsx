@@ -52,7 +52,15 @@ export function ReviewDialog({
       return;
     }
     setIsReviewLoading(true);
-    fetch(`https://tickeasy-team-backend.onrender.com/api/v1/${concert.concertId}/review`)
+    // 從 localStorage 取得 token，並加到 Authorization header
+    const token = typeof window !== "undefined" ? localStorage.getItem("tickeasy_token") : null;
+    console.log(concert.concertId);
+    fetch(`https://tickeasy-team-backend.onrender.com/api/v1/concerts/${concert.concertId}/reviews`, {
+      headers: {
+        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        "Content-Type": "application/json"
+      }
+    })
       .then(res => res.json())
       .then(data => {
         console.log("審核API回傳", data);
