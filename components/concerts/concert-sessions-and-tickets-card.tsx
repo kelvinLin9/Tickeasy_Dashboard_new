@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 interface TicketType {
   ticketTypeId: string;
@@ -8,6 +8,8 @@ interface TicketType {
   totalQuantity: number;
   remainingQuantity: number;
   ticketBenefits?: string;
+  entranceType?: string;
+  ticketRefundPolicy?: string;
 }
 
 interface ConcertSession {
@@ -16,48 +18,21 @@ interface ConcertSession {
   sessionStart?: string;
   sessionEnd?: string;
   sessionTitle?: string;
-  tickets: TicketType[];
+  imgSeattable?: string;
+  ticketTypes: TicketType[];
 }
 
 interface ConcertSessionsAndTicketsCardProps {
-  concertId: string;
+  sessions: ConcertSession[];
 }
 
-// 場次與票價卡片元件
-const ConcertSessionsAndTicketsCard: React.FC<ConcertSessionsAndTicketsCardProps> = ({ concertId }) => {
-  const [sessions, setSessions] = useState<ConcertSession[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!concertId) return;
-    setLoading(true);
-    // 從 localStorage 取得 token，並加到 Authorization header
-    const token = typeof window !== "undefined" ? localStorage.getItem("tickeasy_token") : null;
-    fetch(`/api/concerts/${concertId}/sessions-tickets`, {
-      headers: {
-        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-        "Content-Type": "application/json"
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === "success" && Array.isArray(data.data)) {
-          setSessions(data.data);
-        } else {
-          setSessions([]);
-        }
-      })
-      .catch(() => setSessions([]))
-      .finally(() => setLoading(false));
-  }, [concertId]);
-
+// 場次與票價卡片元件（只接收 sessions props，不再 fetch）
+const ConcertSessionsAndTicketsCard: React.FC<ConcertSessionsAndTicketsCardProps> = ({ sessions }) => {
   return (
     <div className="card mt-6">
       {/* 標題 */}
       <h2 className="text-xl font-bold mb-2">場次與票價</h2>
-      {loading ? (
-        <div className="text-sm text-muted-foreground">載入中...</div>
-      ) : sessions.length === 0 ? (
+      {sessions.length === 0 ? (
         <div className="text-sm text-muted-foreground">尚無場次資料</div>
       ) : (
         <div className="space-y-6">
@@ -66,7 +41,7 @@ const ConcertSessionsAndTicketsCard: React.FC<ConcertSessionsAndTicketsCardProps
               <div className="font-medium mb-1">
                 場次：{session.sessionTitle || "未命名"}（{session.sessionDate || "未設定"} {session.sessionStart || ""}~{session.sessionEnd || ""}）
               </div>
-              {session.tickets.length === 0 ? (
+              {session.ticketTypes.length === 0 ? (
                 <div className="text-sm text-muted-foreground">此場次尚無票種</div>
               ) : (
                 <table className="w-full text-sm mt-2">
@@ -79,7 +54,7 @@ const ConcertSessionsAndTicketsCard: React.FC<ConcertSessionsAndTicketsCardProps
                     </tr>
                   </thead>
                   <tbody>
-                    {session.tickets.map((t) => (
+                    {session.ticketTypes.map((t) => (
                       <tr key={t.ticketTypeId} className="border-b last:border-0">
                         <td>{t.ticketTypeName}</td>
                         <td>${t.ticketTypePrice}</td>
