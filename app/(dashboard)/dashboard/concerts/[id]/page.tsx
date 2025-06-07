@@ -12,6 +12,7 @@ import ConcertOrganizationCard from "@/components/concerts/concert-organization-
 import ConcertVenueCard from "@/components/concerts/concert-venue-card";
 import ConcertReviewHistory from "@/components/concerts/concert-review-history";
 import ConcertReviewActions from "@/components/concerts/concert-review-actions";
+import ConcertReviewPanel from "@/components/concerts/concert-review-panel";
 
 interface ConcertDetailPageProps {
   params: {
@@ -112,9 +113,7 @@ export default async function ConcertDetailPage({ params }: ConcertDetailPagePro
         <ConcertVenueCard venue={concert.venue || {}} />
       </div>
 
-      <ConcertReviewHistory concertId={concert.concertId} />
-
-      <ConcertReviewActions concertId={concert.concertId} onReviewComplete={() => {}} />
+      <ConcertReviewPanel concertId={concert.concertId} />
     </div>
   );
 } 
