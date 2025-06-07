@@ -1,0 +1,187 @@
+// components/dashboard/stats-card.tsx
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+interface StatsCardProps {
+  title: string;
+  value: number | string;
+  description?: string;
+  icon?: React.ReactNode;
+  className?: string;
+  trend?: {
+    value: number;
+    isPositive: boolean;
+  };
+}
+
+export function StatsCard({
+  title,
+  value,
+  description,
+  icon,
+  className,
+  trend,
+}: StatsCardProps) {
+  return (
+    <Card className={cn("", className)}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {icon && <div className="text-muted-foreground">{icon}</div>}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        {description && (
+          <p className="text-xs text-muted-foreground mt-1">{description}</p>
+        )}
+        {trend && (
+          <div className="flex items-center mt-2">
+            <span
+              className={cn(
+                "text-xs font-medium",
+                trend.isPositive ? "text-green-600" : "text-red-600"
+              )}
+            >
+              {trend.isPositive ? "+" : "-"}{trend.value}%
+            </span>
+            <span className="text-xs text-muted-foreground ml-1">
+              較上期
+            </span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// app/(dashboard)/dashboard/page.tsx
+import { createClient } from "@/lib/supabase/server";
+import { StatsCard } from "@/components/dashboard/stats-card";
+import { 
+  Users, 
+  Music, 
+  ShoppingCart, 
+  DollarSign,
+  CheckCircle,
+  Clock,
+  XCircle,
+  FileText
+} from "lucide-react";
+
+export default async function DashboardPage() {
+  const supabase = await createClient();
+
+  // 獲取統計數據
+  const [
+    { count: totalUsers },
+    { count: totalConcerts },
+    { count: totalOrders },
+    { data: concertStats }
+  ] = await Promise.all([
+    supabase.from("users").select("*", { count: "exact", head: true }),
+    supabase.from("concert").select("*", { count: "exact", head: true }),
+    supabase.from("order").select("*", { count: "exact", head: true }),
+    supabase
+      .from("concert")
+      .select("conInfoStatus")
+  ]);
+
+  // 計算演唱會狀態統計
+  const statusCounts = {
+    draft: 0,
+    reviewing: 0,
+    published: 0,
+    rejected: 0,
+    finished: 0,
+  };
+
+  concertStats?.forEach((concert) => {
+    if (concert.conInfoStatus in statusCounts) {
+      statusCounts[concert.conInfoStatus as keyof typeof statusCounts]++;
+    }
+  });
+
+  // 計算待審核數量（reviewing 狀態）
+  const pendingReviewCount = statusCounts.reviewing;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">儀表板</h1>
+        <p className="text-muted-foreground">
+          歡迎回到 Tickeasy 管理後台
+        </p>
+      </div>
+
+      {/* 主要統計卡片 */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          title="總用戶數"
+          value={totalUsers || 0}
+          icon={<Users className="h-4 w-4" />}
+          description="註冊用戶總數"
+        />
+        <StatsCard
+          title="總演唱會數"
+          value={totalConcerts || 0}
+          icon={<Music className="h-4 w-4" />}
+          description="所有演唱會活動"
+        />
+        <StatsCard
+          title="總訂單數"
+          value={totalOrders || 0}
+          icon={<ShoppingCart className="h-4 w-4" />}
+          description="所有訂單記錄"
+        />
+        <StatsCard
+          title="待審核"
+          value={pendingReviewCount}
+          icon={<Clock className="h-4 w-4" />}
+          description="需要審核的演唱會"
+          className={pendingReviewCount > 0 ? "border-orange-200" : ""}
+        />
+      </div>
+
+      {/* 演唱會狀態統計 */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">演唱會狀態分布</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <StatsCard
+            title="草稿"
+            value={statusCounts.draft}
+            icon={<FileText className="h-4 w-4" />}
+          />
+          <StatsCard
+            title="審核中"
+            value={statusCounts.reviewing}
+            icon={<Clock className="h-4 w-4" />}
+            className={statusCounts.reviewing > 0 ? "border-orange-200" : ""}
+          />
+          <StatsCard
+            title="已發布"
+            value={statusCounts.published}
+            icon={<CheckCircle className="h-4 w-4" />}
+            className="border-green-200"
+          />
+          <StatsCard
+            title="已拒絕"
+            value={statusCounts.rejected}
+            icon={<XCircle className="h-4 w-4" />}
+            className={statusCounts.rejected > 0 ? "border-red-200" : ""}
+          />
+          <StatsCard
+            title="已完成"
+            value={statusCounts.finished}
+            icon={<CheckCircle className="h-4 w-4" />}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// app/(dashboard)/page.tsx (Dashboard 根目錄重定向)
+import { redirect } from "next/navigation";
+
+export default function DashboardRootPage() {
+  redirect("/dashboard");
+}
