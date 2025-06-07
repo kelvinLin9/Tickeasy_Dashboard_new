@@ -3,9 +3,10 @@ import { useState, useEffect, useCallback } from "react";
 const TOKEN_KEY = "tickeasy_token";
 const USER_KEY = "tickeasy_user";
 
+// 擴充 user 型別，支援 avatar 欄位
 export function useAuth() {
   const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<{ email: string; name?: string } | null>(null);
+  const [user, setUser] = useState<{ email: string; name?: string; avatar?: string } | null>(null);
 
   // 初始化時從 localStorage 讀取
   useEffect(() => {

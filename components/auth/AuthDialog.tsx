@@ -23,6 +23,7 @@ export default function AuthDialog({ open, onOpenChange }: { open: boolean; onOp
       if (res.success) {
         toast.success("登入成功");
         onOpenChange(false);
+        window.location.reload();
       } else {
         toast.error(res.message);
       }
@@ -31,6 +32,7 @@ export default function AuthDialog({ open, onOpenChange }: { open: boolean; onOp
       if (res.success) {
         toast.success("註冊並自動登入成功");
         onOpenChange(false);
+        window.location.reload();
       } else {
         toast.error(res.message);
       }
