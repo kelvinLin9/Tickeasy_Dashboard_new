@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import { useAuth } from "@/components/auth/useAuth";
+import AuthDialog from "@/components/auth/AuthDialog";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 // 導覽列項目
@@ -12,22 +16,60 @@ const navItems = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
+  const [authOpen, setAuthOpen] = useState(false);
+
   return (
     <nav className="w-full bg-white border-b shadow-sm">
-      <ul className="flex gap-6 px-8 h-14 items-center">
-        {navItems.map((item) => (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              className={`font-medium hover:text-primary transition ${
-                pathname.startsWith(item.href) ? "text-primary underline" : "text-muted-foreground"
-              }`}
-            >
-              {item.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <div className="flex items-center justify-between px-8 h-14">
+        {/* 左側：Logo + 導覽列 */}
+        <div className="flex items-center gap-8">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Image src="/logo.png" alt="Tickeasy Logo" width={32} height={32} />
+            <span className="font-bold text-xl">Tickeasy</span>
+          </Link>
+          <ul className="flex gap-6">
+            {navItems.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={`font-medium hover:text-primary transition ${
+                    pathname.startsWith(item.href)
+                      ? "text-primary underline"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+        {/* 右側：用戶資訊/登入註冊 */}
+        <div>
+          {user ? (
+            <div className="flex items-center gap-3">
+              <span className="font-medium">{user.name || user.email}</span>
+              <button
+                onClick={logout}
+                className="ml-2 px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm"
+              >
+                登出
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={() => setAuthOpen(true)}
+                className="px-4 py-1 rounded bg-primary text-white hover:bg-primary/90 text-sm"
+              >
+                登入 / 註冊
+              </button>
+              <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
+            </>
+          )}
+        </div>
+      </div>
     </nav>
   );
 } 

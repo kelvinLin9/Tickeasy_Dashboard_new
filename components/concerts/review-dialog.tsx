@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Concert } from "@/lib/types/concert";
 import {
   Dialog,
@@ -13,6 +13,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CheckCircle, XCircle } from "lucide-react";
+
+// 上次審核結果型別
+interface ReviewRecord {
+  reviewStatus: string;
+  reviewNote: string | null;
+  aiResponse?: {
+    summary?: string;
+    reasons?: string[];
+    suggestions?: string[];
+  };
+  createdAt: string;
+}
 
 interface ReviewDialogProps {
   concert: Concert | null;
@@ -29,6 +41,33 @@ export function ReviewDialog({
 }: ReviewDialogProps) {
   const [reviewNote, setReviewNote] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [lastReview, setLastReview] = useState<ReviewRecord | null>(null);
+  const [isReviewLoading, setIsReviewLoading] = useState(false);
+
+  // 取得上次審核結果
+  useEffect(() => {
+    console.log("fetch review for", concert?.concertId, "open:", open);
+    if (!concert?.concertId || !open) {
+      setLastReview(null);
+      return;
+    }
+    setIsReviewLoading(true);
+    fetch(`https://tickeasy-team-backend.onrender.com/api/v1/${concert.concertId}/review`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("審核API回傳", data);
+        if (data.status === "success" && data.data && data.data.length > 0) {
+          setLastReview(data.data[0]);
+        } else {
+          setLastReview(null);
+        }
+      })
+      .catch((err) => {
+        console.log("審核API錯誤", err);
+        setLastReview(null);
+      })
+      .finally(() => setIsReviewLoading(false));
+  }, [concert?.concertId, open]);
 
   if (!concert) return null;
 
@@ -61,6 +100,19 @@ export function ReviewDialog({
     }
   };
 
+  // 狀態中文對應
+  const statusMap: Record<string, string> = {
+    pending: "待審核",
+    approved: "已通過",
+    rejected: "已拒絕",
+  };
+
+  // 時間格式化
+  function formatDate(iso: string) {
+    const date = new Date(iso);
+    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
@@ -71,6 +123,7 @@ export function ReviewDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+          {/* 演唱會基本資訊 */}
           <div className="space-y-2">
             <Label>演唱會資訊</Label>
             <div className="text-sm text-muted-foreground space-y-1">
@@ -79,6 +132,43 @@ export function ReviewDialog({
               <p>場地：{concert.venue?.venueName || concert.conLocation || "未設定"}</p>
             </div>
           </div>
+          {/* 上次審核結果 */}
+          <div className="space-y-2">
+            <Label>上次審核結果</Label>
+            {isReviewLoading ? (
+              <div className="text-sm text-muted-foreground">載入中...</div>
+            ) : lastReview ? (
+              <div className="text-sm bg-gray-50 rounded p-3 space-y-1">
+                <p>狀態：{statusMap[lastReview.reviewStatus] || lastReview.reviewStatus}</p>
+                {lastReview.reviewNote && <p>審核備註：{lastReview.reviewNote}</p>}
+                {lastReview.aiResponse?.summary && <p>AI 審核摘要：{lastReview.aiResponse.summary}</p>}
+                {lastReview.aiResponse?.reasons && lastReview.aiResponse.reasons.length > 0 && (
+                  <div>
+                    <p>AI 主要理由：</p>
+                    <ul className="list-disc pl-5">
+                      {lastReview.aiResponse.reasons.map((r, i) => (
+                        <li key={i}>{r}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {lastReview.aiResponse?.suggestions && lastReview.aiResponse.suggestions.length > 0 && (
+                  <div>
+                    <p>AI 建議調整：</p>
+                    <ul className="list-disc pl-5">
+                      {lastReview.aiResponse.suggestions.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <p>審核時間：{formatDate(lastReview.createdAt)}</p>
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">尚無審核紀錄</div>
+            )}
+          </div>
+          {/* 審核備註 */}
           <div className="space-y-2">
             <Label htmlFor="reviewNote">審核備註</Label>
             <Textarea
