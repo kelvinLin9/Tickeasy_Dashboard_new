@@ -29,26 +29,38 @@ export function SignUpForm({
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = createClient();
     setIsLoading(true);
     setError(null);
-
     if (password !== repeatPassword) {
       setError("Passwords do not match");
       setIsLoading(false);
       return;
     }
-
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/protected`,
-        },
+      const res = await fetch("https://tickeasy-team-backend.onrender.com/api/v1/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name: email.split("@")[0] }),
       });
-      if (error) throw error;
-      router.push("/auth/sign-up-success");
+      const data = await res.json();
+      if (data.status === "success") {
+        // 註冊成功自動登入
+        const loginRes = await fetch("https://tickeasy-team-backend.onrender.com/api/v1/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const loginData = await loginRes.json();
+        if (loginData.token) {
+          localStorage.setItem("tickeasy_token", loginData.token);
+          localStorage.setItem("tickeasy_user", JSON.stringify(loginData.user));
+          window.location.href = "/";
+        } else {
+          setError(loginData.message || "自動登入失敗");
+        }
+      } else {
+        setError(data.message || "註冊失敗");
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {

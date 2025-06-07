@@ -28,18 +28,23 @@ export function LoginForm({
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = createClient();
     setIsLoading(true);
     setError(null);
-
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const res = await fetch("https://tickeasy-team-backend.onrender.com/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
-      if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/protected");
+      const data = await res.json();
+      if (data.status === "success" && data.data && data.data.token) {
+        localStorage.setItem("tickeasy_token", data.data.token);
+        localStorage.setItem("tickeasy_user", JSON.stringify(data.data.user));
+        window.location.href = "/";
+        return;
+      } else {
+        setError(data.message || "登入失敗");
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
