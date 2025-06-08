@@ -40,7 +40,7 @@ export function LoginForm({
       if (data.status === "success" && data.data && data.data.token) {
         localStorage.setItem("tickeasy_token", data.data.token);
         localStorage.setItem("tickeasy_user", JSON.stringify(data.data.user));
-        window.location.href = "/";
+        window.location.href = "/dashboard";
         return;
       } else {
         setError(data.message || "登入失敗");

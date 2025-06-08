@@ -16,12 +16,12 @@ export default async function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      {/* <div>
         <h1 className="text-3xl font-bold tracking-tight">用戶管理</h1>
         <p className="text-muted-foreground">
           管理系統用戶和權限設定
         </p>
-      </div>
+      </div> */}
 
       <Card>
         <CardHeader>

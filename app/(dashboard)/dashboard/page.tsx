@@ -49,12 +49,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      {/* <div>
         <h1 className="text-3xl font-bold tracking-tight">儀表板</h1>
         <p className="text-muted-foreground">
           歡迎回到 Tickeasy 管理後台
         </p>
-      </div>
+      </div> */}
 
       {/* 主要統計卡片 */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

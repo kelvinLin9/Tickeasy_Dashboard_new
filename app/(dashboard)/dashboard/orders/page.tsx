@@ -56,12 +56,12 @@ export default async function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      {/* <div>
         <h1 className="text-3xl font-bold tracking-tight">訂單管理</h1>
         <p className="text-muted-foreground">
           查看和管理所有訂單記錄
         </p>
-      </div>
+      </div> */}
 
       {/* 訂單統計卡片 */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">

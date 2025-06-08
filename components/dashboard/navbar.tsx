@@ -18,7 +18,6 @@ const navItems = [
 export default function Navbar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const [authOpen, setAuthOpen] = useState(false);
 
   return (
     <nav className="w-full bg-white border-b shadow-sm">
@@ -46,7 +45,7 @@ export default function Navbar() {
           </ul>
         </div>
         {/* 右側：用戶資訊/登入註冊 */}
-        <div>
+        <div className="flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-3">
               {/* 用戶大頭貼 */}
@@ -70,15 +69,12 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <>
-              <button
-                onClick={() => setAuthOpen(true)}
-                className="px-4 py-1 rounded bg-primary text-white hover:bg-primary/90 text-sm"
-              >
-                登入 / 註冊
-              </button>
-              <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
-            </>
+            <Link
+              href="/auth/login"
+              className="px-4 py-1 rounded bg-primary text-white hover:bg-primary/90 text-sm"
+            >
+              登入 / 註冊
+            </Link>
           )}
         </div>
       </div>

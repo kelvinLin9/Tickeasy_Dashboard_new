@@ -69,12 +69,12 @@ export default async function ConcertsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      {/* <div>
         <h1 className="text-3xl font-bold tracking-tight">演唱會審核</h1>
         <p className="text-muted-foreground">
           審核和管理所有演唱會活動
         </p>
-      </div>
+      </div> */}
 
       <ConcertStats stats={stats} />
 
